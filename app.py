@@ -1,7 +1,11 @@
+import json
+import urllib
+
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
 import plotly.graph_objs as go
+
 
 ########### Define your variables
 beers=['Chesapeake Stout', 'Snake Dog IPA', 'Imperial Porter', 'Double Dog IPA']
@@ -17,27 +21,24 @@ label2='ABV'
 githublink='https://github.com/austinlasseter/flying-dog-beers'
 sourceurl='https://www.flyingdog.com/beers/'
 
+## Load the data
+dataurl = "https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-json/dpc-covid19-ita-andamento-nazionale.json"
+data = urllib.request.urlopen(dataurl).read().decode()
+dataj = json.loads(data)
+
+y = [d['totale_casi'] for d in data]
+x = range(len(y))
+
 ########### Set up the chart
-bitterness = go.Bar(
-    x=beers,
-    y=ibu_values,
-    name=label1,
-    marker={'color':color1}
-)
-alcohol = go.Bar(
-    x=beers,
-    y=abv_values,
-    name=label2,
-    marker={'color':color2}
+trace = go.Scatter(
+    x = x,
+    y = y,
+    mode = 'markers'
 )
 
-beer_data = [bitterness, alcohol]
-beer_layout = go.Layout(
-    barmode='group',
-    title = mytitle
-)
+beer_data = [trace]
 
-beer_fig = go.Figure(data=beer_data, layout=beer_layout)
+beer_fig = go.Figure(data=beer_data)
 
 
 ########### Initiate the app
