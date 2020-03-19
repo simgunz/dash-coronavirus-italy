@@ -6,6 +6,13 @@ import dash_core_components as dcc
 import dash_html_components as html
 import plotly.graph_objs as go
 
+import numpy as np
+from scipy.optimize import curve_fit
+
+
+def exponenial_func(x, a, b, c):
+    return a*np.exp(-b*x)+c
+
 
 ########### Define your variables
 color1='lightblue'
@@ -24,6 +31,11 @@ dataj = json.loads(data)
 y = [d['totale_casi'] for d in dataj]
 x = list(range(len(y)))
 
+popt, pcov = curve_fit(exponenial_func, np.array(x), np.array(y), p0=(1, 1e-6, 1))
+
+xx = np.array(x)
+yy = exponenial_func(xx, *popt)
+
 ########### Set up the chart
 trace = go.Scatter(
     x = x,
@@ -31,7 +43,15 @@ trace = go.Scatter(
     mode = 'markers'
 )
 
-beer_data = [trace]
+trace2 = go.Scatter(
+                  x=xx,
+                  y=yy,
+                  mode='lines',
+                  marker=go.Marker(color='rgb(31, 119, 180)'),
+                  name='Fit'
+                  )
+
+beer_data = [trace, trace2]
 beer_fig = go.Figure(data=beer_data)
 
 
