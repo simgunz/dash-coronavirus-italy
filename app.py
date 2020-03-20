@@ -16,6 +16,10 @@ def exponenial_func(x, a, b, c):
     return a * np.exp(b * x) + c
 
 
+def fsigmoid(x, L ,x0, k, b):
+    y = L / (1 + np.exp(-k*(x-x0)))+b
+    return (y)
+
 ########### Define your variables
 color1='lightblue'
 mytitle='Coronavirus casi totali'
@@ -103,6 +107,22 @@ def update_figure(selected_day):
         mode='line',
         opacity=1,
         name='Fit esponenziale'
+    ))
+
+
+    p0 = [max(y_fit[:selected_day]), np.median(x_fit[:selected_day]),1,min(y_fit[:selected_day])]
+    popt, pcov = curve_fit(fsigmoid, x_fit[:selected_day], y_fit[:selected_day], p0, method='dogbox')
+    yy = fsigmoid(xx, *popt)
+
+    print(yy)
+
+    traces.append(dict(
+        x=[datetime.strptime(report['data'], '%Y-%m-%d %H:%M:%S').strftime('%d %b') for i, report in enumerate(dataj)],
+        y=yy,
+        #text=df_by_continent['country'],
+        mode='line',
+        opacity=1,
+        name='Fit sigmoide'
     ))
 
     return {
