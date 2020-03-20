@@ -1,9 +1,11 @@
 import json
 import urllib
+from datetime import datetime
 
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
+from dash.dependencies import Input, Output
 import plotly.graph_objs as go
 
 import numpy as np
@@ -11,7 +13,7 @@ from scipy.optimize import curve_fit
 
 
 def exponenial_func(x, a, b, c):
-    return a*np.exp(-b*x)+c
+    return a * np.exp(b * x) + c
 
 
 ########### Define your variables
@@ -31,30 +33,6 @@ dataj = json.loads(data)
 y = [d['totale_casi'] for d in dataj]
 x = list(range(len(y)))
 
-popt, pcov = curve_fit(exponenial_func, np.array(x), np.array(y), p0=(1, 1e-6, 1))
-
-xx = np.array(x)
-yy = exponenial_func(xx, *popt)
-
-########### Set up the chart
-trace = go.Scatter(
-    x = x,
-    y = y,
-    mode = 'markers'
-)
-
-trace2 = go.Scatter(
-                  x=xx,
-                  y=yy,
-                  mode='lines',
-                  marker=go.Marker(color='rgb(31, 119, 180)'),
-                  name='Fit'
-                  )
-
-beer_data = [trace, trace2]
-beer_fig = go.Figure(data=beer_data)
-
-
 ########### Initiate the app
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
@@ -62,17 +40,82 @@ server = app.server
 app.title=tabtitle
 
 ########### Set up the layout
-app.layout = html.Div(children=[
-    html.H1(myheading),
-    dcc.Graph(
-        id='flyingdog',
-        figure=beer_fig
+app.layout = html.Div([
+    dcc.Graph(id='graph-with-slider'),
+    dcc.Slider(
+        id='year-slider',
+        min=5,
+        max=len(y),
+        value=5,
+        marks={i: datetime.strptime(report['data'], '%Y-%m-%d %H:%M:%S').strftime('%d %b') for i, report in enumerate(dataj)},
     ),
+    html.Br(),
     html.A('Code on Github', href=githublink),
     html.Br(),
     html.A('Data Source', href=sourceurl),
-    ]
-)
+])
+
+@app.callback(
+    Output('graph-with-slider', 'figure'),
+    [Input('year-slider', 'value')])
+def update_figure(selected_day):
+    # filtered_df = df[df.year == selected_day]
+    traces = []
+
+    x_dates = [datetime.strptime(report['data'], '%Y-%m-%d %H:%M:%S').strftime('%d %b') for i, report in enumerate(dataj)]
+    traces.append(dict(
+        x=x_dates,
+        y=y,
+        #text=df_by_continent['country'],
+        mode='markers',
+        opacity=0.7,
+        marker={
+            'size': 15,
+            'line': {'width': 0.5, 'color': 'white'}
+        },
+        name='Casi'
+    ))
+
+    traces.append(dict(
+        x=x_dates[:selected_day],
+        y=y[:selected_day],
+        #text=df_by_continent['country'],
+        mode='markers',
+        opacity=0.7,
+        marker={
+            'size': 15,
+            'line': {'width': 0.5, 'color': 'white'}
+        },
+        name='Dati usati per il fit'
+    ))
+
+    x_fit = np.array(x)
+    y_fit = np.array(y)
+    popt, pcov = curve_fit(exponenial_func, x_fit[:selected_day], y_fit[:selected_day], p0=(1, 1e-6, 1))
+
+    xx = np.array(x)
+    yy = exponenial_func(xx, *popt)
+
+    traces.append(dict(
+        x=[datetime.strptime(report['data'], '%Y-%m-%d %H:%M:%S').strftime('%d %b') for i, report in enumerate(dataj)],
+        y=yy,
+        #text=df_by_continent['country'],
+        mode='line',
+        opacity=1,
+        name='Fit esponenziale'
+    ))
+
+    return {
+        'data': traces,
+        'layout': dict(
+            xaxis={'title': 'Giorno'},
+            yaxis={'title': 'Casi totali'},
+            margin={'l': 40, 'b': 40, 't': 10, 'r': 10},
+            hovermode='closest',
+            transition = {'duration': 500},
+        )
+    }
+
 
 if __name__ == '__main__':
-    app.run_server()
+    app.run_server(debug=True)
