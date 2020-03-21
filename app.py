@@ -76,7 +76,7 @@ app.layout = html.Div(
                             id="day-slider",
                             min=5,
                             max=day_count,
-                            value=day_count - 5,
+                            value=day_count,
                             step=1,
                             marks={
                                 i: x_days_str[i] for i in range(0, len(x_days_str), 5)
