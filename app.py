@@ -42,25 +42,30 @@ y_cases_total = [d["totale_casi"] for d in dataset]
 day_count = len(y_cases_total)
 fit_day_count = day_count + 10
 x_days = day_labels(dataset[0]["data"], fit_day_count)
+x_days_str = day_labels(dataset[0]["data"], fit_day_count, as_str=True)[:day_count]
 x_days_index = list(range(len(x_days)))
 
 # Initiate the app
 external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
-app = dash.Dash(__name__)
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 server = app.server
 app.title = tabtitle
 
 # Set up the layout
 app.layout = html.Div(
     [
-        dcc.Slider(
-            id="day-slider",
-            min=5,
-            max=day_count,
-            value=day_count - 5,
-            marks={i: day for i, day in enumerate(x_days[:day_count])},
+        html.Div(
+            [
+                dcc.Slider(
+                    id="day-slider",
+                    min=5,
+                    max=day_count,
+                    value=day_count - 5,
+                    marks={i: day for i, day in enumerate(x_days_str)},
+                ),
+            ]
         ),
-        dcc.Graph(id="total-cases",),
+        html.Div([dcc.Graph(id="total-cases")], style={"padding": "50px"}),
         html.Br(),
         html.Div(id="total-cases-errors"),
         html.Br(),
@@ -85,7 +90,7 @@ def create_total_cases(selected_day_index):
         mode="markers",
         opacity=1,
         marker={
-            "size": 15,
+            "size": 10,
             "color": colors[0],
             "line": {"width": 0.5, "color": "white"},
         },
@@ -98,7 +103,7 @@ def create_total_cases(selected_day_index):
         mode="markers",
         opacity=1,
         marker={
-            "size": 15,
+            "size": 10,
             "color": colors[1],
             "line": {"width": 0.5, "color": "white"},
         },
@@ -164,7 +169,7 @@ def create_total_cases(selected_day_index):
     figure = {
         "data": traces,
         "layout": dict(
-            # xaxis={"rangeslider": {"visible": False}},
+            xaxis={"type": "date", "rangeslider": {"visible": True}},
             yaxis={"title": "Total number of cases"},
             margin={"l": 40, "b": 40, "t": 10, "r": 10},
             hovermode="closest",

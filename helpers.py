@@ -4,12 +4,15 @@ import numpy as np
 from scipy.optimize import curve_fit
 
 
-def day_labels(first_day_str, time_span):
+def day_labels(first_day_str, time_span, as_str=False):
     current_day = datetime.strptime(first_day_str, "%Y-%m-%d %H:%M:%S")
     step = timedelta(days=1)
     x_days = []
     for i in range(time_span):
-        x_days.append(current_day.strftime("%d %b"))
+        if as_str:
+            x_days.append(current_day.strftime("%d %b"))
+        else:
+            x_days.append(current_day)
         current_day += step
     return x_days
 
