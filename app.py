@@ -1,5 +1,6 @@
 import json
 import urllib
+from datetime import timedelta
 
 import numpy as np
 
@@ -41,7 +42,8 @@ dataset = json.loads(data)
 
 y_cases_total = [d["totale_casi"] for d in dataset]
 day_count = len(y_cases_total)
-fit_day_count = day_count + 10
+forcast_days = 30
+fit_day_count = day_count + forcast_days
 x_days = day_labels(dataset[0]["data"], fit_day_count)
 x_days_str = day_labels(dataset[0]["data"], fit_day_count, as_str=True)[:day_count]
 x_days_index = list(range(len(x_days)))
@@ -60,18 +62,15 @@ app.layout = html.Div(
         ),
         dbc.Container(
             [
-                html.Div(
-                    [
-                        dcc.Slider(
-                            id="day-slider",
-                            min=5,
-                            max=day_count,
-                            value=day_count - 5,
-                            marks={i: day for i, day in enumerate(x_days_str)},
-                        ),
-                    ]
+                html.Div("Days used for fit:"),
+                dcc.Slider(
+                    id="day-slider",
+                    min=5,
+                    max=day_count,
+                    value=day_count - 5,
+                    marks={i + 1: day for i, day in enumerate(x_days_str)},
                 ),
-                html.Div([dcc.Graph(id="total-cases")], style={"padding": "50px"}),
+                html.Div([dcc.Graph(id="total-cases")], style={"margin-top": "50px"},),
                 html.Br(),
                 html.Div(id="total-cases-errors"),
                 html.Br(),
@@ -177,9 +176,13 @@ def create_total_cases(selected_day_index):
     figure = {
         "data": traces,
         "layout": dict(
-            xaxis={"type": "date", "rangeslider": {"visible": True}},
-            yaxis={"title": "Total number of cases"},
-            margin={"l": 40, "b": 40, "t": 10, "r": 10},
+            xaxis={
+                "type": "date",
+                "range": [x_days[0] - timedelta(days=1), x_days[day_count + 10]],
+                "rangeslider": {"visible": True, "range": [x_days[0], x_days[-1]]},
+            },
+            title="Total number of cases",
+            margin={"l": 40, "b": 40, "t": 50, "r": 10},
             hovermode="closest",
             transition={"duration": 0},
             legend={"x": 0.03, "y": 0.98},
