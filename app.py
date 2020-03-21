@@ -182,6 +182,7 @@ def create_total_cases(selected_day_index):
             margin={"l": 40, "b": 40, "t": 10, "r": 10},
             hovermode="closest",
             transition={"duration": 0},
+            legend={"x": 0.03, "y": 0.98},
         ),
     }
     return figure, "<br />".join(errors)
