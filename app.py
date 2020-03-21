@@ -105,9 +105,9 @@ app.layout = html.Div(
 
 @app.callback(
     [Output("total-cases", "figure"), Output("total-cases-errors", "children")],
-    [Input("day-slider", "value")],
+    [Input("day-slider", "value"), Input("total-cases", "relayoutData")],
 )
-def create_total_cases(selected_day_index):
+def create_total_cases(selected_day_index, relayoutData):
     traces = []
     errors = []
     data_used_for_fit = dict(
@@ -193,12 +193,17 @@ def create_total_cases(selected_day_index):
 
     traces += [data_used_for_fit, data_not_used_for_fit]
 
+    if "xaxis.range" in relayoutData:
+        xaxis_range = relayoutData["xaxis.range"]
+    else:
+        xaxis_range = [x_days[0] - timedelta(days=1), x_days[day_count + 10]]
+
     figure = {
         "data": traces,
         "layout": dict(
             xaxis={
                 "type": "date",
-                "range": [x_days[0] - timedelta(days=1), x_days[day_count + 10]],
+                "range": xaxis_range,
                 "rangeslider": {"visible": True, "range": [x_days[0], x_days[-1]]},
             },
             yaxis={"range": [0, 200000]},
