@@ -11,8 +11,6 @@ from dash.dependencies import Input, Output
 from helpers import fit_data, exponenial_func, logistic_func, day_labels
 
 # Define your variables
-fit_day_count = 30
-
 mytitle = "Coronavirus casi totali"
 tabtitle = "Coronavirus"
 myheading = "Contagi coronavirus"
@@ -42,6 +40,7 @@ dataset = json.loads(data)
 
 y_cases_total = [d["totale_casi"] for d in dataset]
 day_count = len(y_cases_total)
+fit_day_count = day_count + 10
 x_days = day_labels(dataset[0]["data"], fit_day_count)
 x_days_index = list(range(len(x_days)))
 
