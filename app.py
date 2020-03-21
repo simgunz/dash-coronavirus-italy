@@ -58,26 +58,43 @@ app.title = tabtitle
 app.layout = html.Div(
     [
         dbc.Jumbotron(
-            html.H1("Coronavirus forecast Italy", className="display-3 text-center")
+            html.H1("Coronavirus forecast Italy", className="display-3 text-center"),
         ),
         dbc.Container(
             [
-                html.Div("Days used for fit:"),
-                dcc.Slider(
-                    id="day-slider",
-                    min=5,
-                    max=day_count,
-                    value=day_count - 5,
-                    marks={i + 1: day for i, day in enumerate(x_days_str)},
+                html.Div(
+                    [
+                        html.H1("Total number of cases", className="text-center"),
+                        dcc.Graph(id="total-cases"),
+                    ],
+                    style={"margin-top": "50px"},
                 ),
-                html.Div([dcc.Graph(id="total-cases")], style={"margin-top": "50px"},),
-                html.Br(),
+                html.Div(
+                    [
+                        html.Div("Days used for fit:"),
+                        dcc.Slider(
+                            id="day-slider",
+                            min=5,
+                            max=day_count,
+                            value=day_count - 5,
+                            marks={i + 1: day for i, day in enumerate(x_days_str)},
+                        ),
+                    ],
+                    style={"margin-bottom": "50px"},
+                ),
                 html.Div(id="total-cases-errors"),
-                html.Br(),
-                html.A("Code on Github", href=githublink),
-                html.Br(),
-                html.A("Data Source", href=sourceurl),
             ]
+        ),
+        html.Footer(
+            dbc.Container(
+                [
+                    html.A("Code on Github", href=githublink),
+                    html.Br(),
+                    html.A("Data Source", href=sourceurl),
+                ],
+                className="text-white",
+            ),
+            className="page-footer font-small pt-4",
         ),
     ]
 )
@@ -181,7 +198,6 @@ def create_total_cases(selected_day_index):
                 "range": [x_days[0] - timedelta(days=1), x_days[day_count + 10]],
                 "rangeslider": {"visible": True, "range": [x_days[0], x_days[-1]]},
             },
-            title="Total number of cases",
             margin={"l": 40, "b": 40, "t": 50, "r": 10},
             hovermode="closest",
             transition={"duration": 0},
