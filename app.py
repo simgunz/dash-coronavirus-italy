@@ -11,7 +11,7 @@ from dash.dependencies import Input, Output
 from helpers import fit_data, exponenial_func, logistic_func, day_labels
 
 # Define your variables
-fit_day_count = 60
+fit_day_count = 30
 
 mytitle = "Coronavirus casi totali"
 tabtitle = "Coronavirus"
@@ -54,14 +54,14 @@ app.title = tabtitle
 # Set up the layout
 app.layout = html.Div(
     [
-        dcc.Graph(id="total-cases"),
         dcc.Slider(
             id="day-slider",
             min=5,
             max=day_count,
-            value=5,
+            value=day_count - 5,
             marks={i: day for i, day in enumerate(x_days[:day_count])},
         ),
+        dcc.Graph(id="total-cases",),
         html.Br(),
         html.Div(id="total-cases-errors"),
         html.Br(),
@@ -165,8 +165,8 @@ def create_total_cases(selected_day_index):
     figure = {
         "data": traces,
         "layout": dict(
-            # xaxis={"title": "Giorno"},
-            # yaxis={"title": "Casi totali"},
+            # xaxis={"rangeslider": {"visible": False}},
+            yaxis={"title": "Total number of cases"},
             margin={"l": 40, "b": 40, "t": 10, "r": 10},
             hovermode="closest",
             transition={"duration": 0},
