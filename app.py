@@ -77,7 +77,10 @@ app.layout = html.Div(
                             min=5,
                             max=day_count,
                             value=day_count - 5,
-                            marks={i + 1: day for i, day in enumerate(x_days_str)},
+                            step=1,
+                            marks={
+                                i: x_days_str[i] for i in range(0, len(x_days_str), 5)
+                            },
                         ),
                     ],
                     style={"margin-bottom": "50px"},
