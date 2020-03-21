@@ -26,11 +26,11 @@ data = urllib.request.urlopen(dataurl).read().decode()
 dataset = json.loads(data)
 
 y_cases_total = [d["totale_casi"] for d in dataset]
-days = list(range(len(y_cases_total)))
 x_days = [
         datetime.strptime(report["data"], "%Y-%m-%d %H:%M:%S").strftime("%d %b")
         for report in dataset
     ]
+x_days_index = list(range(len(x_days)))
 
 # Initiate the app
 external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
@@ -47,7 +47,7 @@ app.layout = html.Div(
             min=5,
             max=len(x_days),
             value=5,
-            marks={i: day for i, day in enumerate(x_days)},
+            marks={i: day for i, day in enumerate(x_days)}
         ),
         html.Br(),
         html.A("Code on Github", href=githublink),
@@ -61,95 +61,86 @@ def exponenial_func(x, a, b, c):
     return a * np.exp(b * x) + c
 
 
-def fsigmoid(x, L, x0, k, b):
-    y = L / (1 + np.exp(-k * (x - x0))) + b
-    return y
+def logistic_func(x, L, x0, k, b):
+    return L / (1 + np.exp(-k * (x - x0))) + b
+
+
+def fit_data(fit_func, x, y, fit_point_count, p0):
+    x_array = np.array(x)
+    y_array = np.array(y)
+    x_fit = x_array[:fit_point_count]
+    y_fit = y_array[:fit_point_count]
+    popt, pcov = curve_fit(fit_func, x_fit, y_fit, p0=p0)
+    y_fit = fit_func(x_array, *popt)
+    return y_fit
 
 
 @app.callback(Output("total-cases", "figure"), [Input("day-slider", "value")])
 def create_total_cases(selected_day):
-    traces = []
-    traces.append(
-        dict(
-            x=x_days,
-            y=y_cases_total,
-            # text=df_by_continent['country'],
-            mode="markers",
-            opacity=0.7,
-            marker={"size": 15, "line": {"width": 0.5, "color": "white"}},
-            name="Total cases",
+    data_used_for_fit = dict(
+        x=x_days[:selected_day],
+        y=y_cases_total[:selected_day],
+        # text=df_by_continent['country'],
+        mode="markers",
+        opacity=0.7,
+        marker={"size": 15, "line": {"width": 0.5, "color": "white"}},
+        name="Data used for fit",
+    )
+    data_not_used_for_fit = dict(
+        x=x_days[selected_day:],
+        y=y_cases_total[selected_day:],
+        # text=df_by_continent['country'],
+        mode="markers",
+        opacity=0.7,
+        marker={"size": 15, "line": {"width": 0.5, "color": "white"}},
+        name="Data",
+    )
+    traces = [data_used_for_fit, data_not_used_for_fit]
+
+    try:
+        y_exp = fit_data(exponenial_func, x_days_index, y_cases_total, selected_day, p0=(1, 1e-6, 1))
+        traces.append(
+            dict(
+                x=x_days,
+                y=y_exp,
+                # text=df_by_continent['country'],
+                mode="line",
+                opacity=1,
+                name="Exponential fit",
+            )
         )
-    )
+    except RuntimeError:
+        print("Exponential fit failed")
 
-    traces.append(
-        dict(
-            x=x_days[:selected_day],
-            y=y_cases_total[:selected_day],
-            # text=df_by_continent['country'],
-            mode="markers",
-            opacity=0.7,
-            marker={"size": 15, "line": {"width": 0.5, "color": "white"}},
-            name="Dati usati per il fit",
+    try:
+        p0 = (
+            max(y_cases_total),
+            np.median(np.arange(len(x_days))),
+            1,
+            min(y_cases_total),
         )
-    )
-
-    x_fit = np.array(days)
-    y_fit = np.array(y_cases_total)
-    popt, pcov = curve_fit(
-        exponenial_func, x_fit[:selected_day], y_fit[:selected_day], p0=(1, 1e-6, 1)
-    )
-
-    xx = np.array(days)
-    yy = exponenial_func(xx, *popt)
-
-    traces.append(
-        dict(
-            x=[
-                datetime.strptime(report["data"], "%Y-%m-%d %H:%M:%S").strftime("%d %b")
-                for i, report in enumerate(dataset)
-            ],
-            y=yy,
-            # text=df_by_continent['country'],
-            mode="line",
-            opacity=1,
-            name="Fit esponenziale",
+        y_logi = fit_data(logistic_func, x_days_index, y_cases_total, selected_day, p0=p0)
+        traces.append(
+            dict(
+                x=x_days,
+                y=y_logi,
+                # text=df_by_continent['country'],
+                mode="line",
+                opacity=1,
+                name="Logistic fit",
+            )
         )
-    )
-    p0 = [
-        max(y_fit[:selected_day]),
-        np.median(x_fit[:selected_day]),
-        1,
-        min(y_fit[:selected_day]),
-    ]
-    popt, pcov = curve_fit(
-        fsigmoid, x_fit[:selected_day], y_fit[:selected_day], p0, method="dogbox"
-    )
-    yy = fsigmoid(xx, *popt)
-
-    print(yy)
-
-    traces.append(
-        dict(
-            x=[
-                datetime.strptime(report["data"], "%Y-%m-%d %H:%M:%S").strftime("%d %b")
-                for i, report in enumerate(dataset)
-            ],
-            y=yy,
-            # text=df_by_continent['country'],
-            mode="line",
-            opacity=1,
-            name="Fit sigmoide",
-        )
-    )
+    except RuntimeError:
+        print("Logistic fit failed")
 
     return {
         "data": traces,
         "layout": dict(
-            xaxis={"title": "Giorno"},
-            yaxis={"title": "Casi totali"},
+            # xaxis={"title": "Giorno"},
+            # yaxis={"title": "Casi totali"},
             margin={"l": 40, "b": 40, "t": 10, "r": 10},
             hovermode="closest",
-            transition={"duration": 500},
+            transition={"duration": 0},
         ),
     }
 
