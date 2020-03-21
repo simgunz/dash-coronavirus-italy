@@ -7,6 +7,7 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
+import dash_bootstrap_components as dbc
 
 from helpers import fit_data, exponenial_func, logistic_func, day_labels
 
@@ -46,32 +47,39 @@ x_days_str = day_labels(dataset[0]["data"], fit_day_count, as_str=True)[:day_cou
 x_days_index = list(range(len(x_days)))
 
 # Initiate the app
-external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+external_stylesheets = []
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 server = app.server
 app.title = tabtitle
 
 # Set up the layout
 app.layout = html.Div(
     [
-        html.Div(
+        dbc.Jumbotron(
+            html.H1("Coronavirus forecast Italy", className="display-3 text-center")
+        ),
+        dbc.Container(
             [
-                dcc.Slider(
-                    id="day-slider",
-                    min=5,
-                    max=day_count,
-                    value=day_count - 5,
-                    marks={i: day for i, day in enumerate(x_days_str)},
+                html.Div(
+                    [
+                        dcc.Slider(
+                            id="day-slider",
+                            min=5,
+                            max=day_count,
+                            value=day_count - 5,
+                            marks={i: day for i, day in enumerate(x_days_str)},
+                        ),
+                    ]
                 ),
+                html.Div([dcc.Graph(id="total-cases")], style={"padding": "50px"}),
+                html.Br(),
+                html.Div(id="total-cases-errors"),
+                html.Br(),
+                html.A("Code on Github", href=githublink),
+                html.Br(),
+                html.A("Data Source", href=sourceurl),
             ]
         ),
-        html.Div([dcc.Graph(id="total-cases")], style={"padding": "50px"}),
-        html.Br(),
-        html.Div(id="total-cases-errors"),
-        html.Br(),
-        html.A("Code on Github", href=githublink),
-        html.Br(),
-        html.A("Data Source", href=sourceurl),
     ]
 )
 
