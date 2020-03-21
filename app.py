@@ -18,6 +18,18 @@ myheading = "Contagi coronavirus"
 label1 = "Totale contagi"
 githublink = "https://github.com/simgunz/dash-coronavirus-italy"
 sourceurl = "https://github.com/pcm-dpc/COVID-19"
+colors = [
+    "#1f77b4",  # muted blue
+    "#ff7f0e",  # safety orange
+    "#2ca02c",  # cooked asparagus green
+    "#d62728",  # brick red
+    "#9467bd",  # muted purple
+    "#8c564b",  # chestnut brown
+    "#e377c2",  # raspberry yogurt pink
+    "#7f7f7f",  # middle gray
+    "#bcbd22",  # curry yellow-green
+    "#17becf",  # blue-teal
+]
 
 # Load the data
 dataurl = (
@@ -36,7 +48,7 @@ x_days_index = list(range(len(x_days)))
 
 # Initiate the app
 external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+app = dash.Dash(__name__)
 server = app.server
 app.title = tabtitle
 
@@ -84,14 +96,19 @@ def fit_data(fit_func, x, y, fit_point_count, p0):
     [Input("day-slider", "value")],
 )
 def create_total_cases(selected_day):
+    traces = []
     errors = []
     data_used_for_fit = dict(
         x=x_days[:selected_day],
         y=y_cases_total[:selected_day],
         # text=df_by_continent['country'],
         mode="markers",
-        opacity=0.7,
-        marker={"size": 15, "line": {"width": 0.5, "color": "white"}},
+        opacity=1,
+        marker={
+            "size": 15,
+            "color": colors[0],
+            "line": {"width": 0.5, "color": "white"},
+        },
         name="Data used for fit",
     )
     data_not_used_for_fit = dict(
@@ -99,11 +116,14 @@ def create_total_cases(selected_day):
         y=y_cases_total[selected_day:],
         # text=df_by_continent['country'],
         mode="markers",
-        opacity=0.7,
-        marker={"size": 15, "line": {"width": 0.5, "color": "white"}},
+        opacity=1,
+        marker={
+            "size": 15,
+            "color": colors[1],
+            "line": {"width": 0.5, "color": "white"},
+        },
         name="Data",
     )
-    traces = [data_used_for_fit, data_not_used_for_fit]
 
     try:
         y_exp = fit_data(
@@ -115,6 +135,7 @@ def create_total_cases(selected_day):
                 y=y_exp,
                 # text=df_by_continent['country'],
                 mode="line",
+                line={"color": colors[2]},
                 opacity=1,
                 name="Exponential fit",
             )
@@ -138,12 +159,15 @@ def create_total_cases(selected_day):
                 y=y_logi,
                 # text=df_by_continent['country'],
                 mode="line",
+                line={"color": colors[3]},
                 opacity=1,
                 name="Logistic fit",
             )
         )
     except RuntimeError:
         errors.append("Logistic fit failed")
+
+    traces += [data_used_for_fit, data_not_used_for_fit]
 
     figure = {
         "data": traces,
