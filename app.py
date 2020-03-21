@@ -201,6 +201,7 @@ def create_total_cases(selected_day_index):
                 "range": [x_days[0] - timedelta(days=1), x_days[day_count + 10]],
                 "rangeslider": {"visible": True, "range": [x_days[0], x_days[-1]]},
             },
+            yaxis={"range": [0, 200000]},
             margin={"l": 40, "b": 40, "t": 50, "r": 10},
             hovermode="closest",
             transition={"duration": 0},
