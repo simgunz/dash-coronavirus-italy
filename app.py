@@ -20,16 +20,18 @@ githublink = "https://github.com/simgunz/dash-coronavirus-italy"
 sourceurl = "https://github.com/pcm-dpc/COVID-19"
 
 # Load the data
-dataurl = ("https://raw.githubusercontent.com/pcm-dpc/"
-           "COVID-19/master/dati-json/dpc-covid19-ita-andamento-nazionale.json")
+dataurl = (
+    "https://raw.githubusercontent.com/pcm-dpc/"
+    "COVID-19/master/dati-json/dpc-covid19-ita-andamento-nazionale.json"
+)
 data = urllib.request.urlopen(dataurl).read().decode()
 dataset = json.loads(data)
 
 y_cases_total = [d["totale_casi"] for d in dataset]
 x_days = [
-        datetime.strptime(report["data"], "%Y-%m-%d %H:%M:%S").strftime("%d %b")
-        for report in dataset
-    ]
+    datetime.strptime(report["data"], "%Y-%m-%d %H:%M:%S").strftime("%d %b")
+    for report in dataset
+]
 x_days_index = list(range(len(x_days)))
 
 # Initiate the app
@@ -47,8 +49,10 @@ app.layout = html.Div(
             min=5,
             max=len(x_days),
             value=5,
-            marks={i: day for i, day in enumerate(x_days)}
+            marks={i: day for i, day in enumerate(x_days)},
         ),
+        html.Br(),
+        html.Div(id="total-cases-errors"),
         html.Br(),
         html.A("Code on Github", href=githublink),
         html.Br(),
@@ -75,8 +79,12 @@ def fit_data(fit_func, x, y, fit_point_count, p0):
     return y_fit
 
 
-@app.callback(Output("total-cases", "figure"), [Input("day-slider", "value")])
+@app.callback(
+    [Output("total-cases", "figure"), Output("total-cases-errors", "children")],
+    [Input("day-slider", "value")],
+)
 def create_total_cases(selected_day):
+    errors = []
     data_used_for_fit = dict(
         x=x_days[:selected_day],
         y=y_cases_total[:selected_day],
@@ -98,7 +106,9 @@ def create_total_cases(selected_day):
     traces = [data_used_for_fit, data_not_used_for_fit]
 
     try:
-        y_exp = fit_data(exponenial_func, x_days_index, y_cases_total, selected_day, p0=(1, 1e-6, 1))
+        y_exp = fit_data(
+            exponenial_func, x_days_index, y_cases_total, selected_day, p0=(1, 1e-6, 1)
+        )
         traces.append(
             dict(
                 x=x_days,
@@ -110,7 +120,7 @@ def create_total_cases(selected_day):
             )
         )
     except RuntimeError:
-        print("Exponential fit failed")
+        errors.append("Exponential fit failed")
 
     try:
         p0 = (
@@ -119,7 +129,9 @@ def create_total_cases(selected_day):
             1,
             min(y_cases_total),
         )
-        y_logi = fit_data(logistic_func, x_days_index, y_cases_total, selected_day, p0=p0)
+        y_logi = fit_data(
+            logistic_func, x_days_index, y_cases_total, selected_day, p0=p0
+        )
         traces.append(
             dict(
                 x=x_days,
@@ -131,9 +143,9 @@ def create_total_cases(selected_day):
             )
         )
     except RuntimeError:
-        print("Logistic fit failed")
+        errors.append("Logistic fit failed")
 
-    return {
+    figure = {
         "data": traces,
         "layout": dict(
             # xaxis={"title": "Giorno"},
@@ -143,6 +155,7 @@ def create_total_cases(selected_day):
             transition={"duration": 0},
         ),
     }
+    return figure, "<br />".join(errors)
 
 
 if __name__ == "__main__":
