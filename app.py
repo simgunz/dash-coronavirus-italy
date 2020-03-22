@@ -63,49 +63,56 @@ server = app.server
 app.title = tabtitle
 
 # Set up the layout
+
+controls = dbc.Card(
+    dbc.FormGroup(
+        [
+            dbc.Label("Days used for fit", html_for="day-slider"),
+            dcc.Slider(
+                id="day-slider",
+                min=5,
+                max=day_count,
+                value=day_count,
+                step=1,
+                marks={i: x_days_str[i] for i in range(0, len(x_days_str), 5)},
+            ),
+        ]
+    ),
+    body=True,
+)
+
+display = [
+    html.H1("Total number of cases", className="text-center"),
+    dcc.Graph(id="total-cases"),
+    html.Div(id="total-cases-errors"),
+]
+
+footer = (
+    html.Footer(
+        dbc.Container(
+            [
+                html.A("Code on Github", href=githublink),
+                html.Br(),
+                html.A("Data Source", href=sourceurl),
+            ],
+            className="text-white",
+        ),
+        className="page-footer font-small pt-4",
+    ),
+)
+
 app.layout = html.Div(
     [
         dbc.Jumbotron(
-            html.H1("Coronavirus forecast Italy", className="display-3 text-center"),
+            html.H1("Coronavirus forecast Italy", className="display-4 text-center")
         ),
         dbc.Container(
             [
-                html.Div(
-                    [
-                        html.H1("Total number of cases", className="text-center"),
-                        dcc.Graph(id="total-cases"),
-                    ],
-                    style={"margin-top": "50px"},
-                ),
-                html.Div(
-                    [
-                        html.Div("Days used for fit:"),
-                        dcc.Slider(
-                            id="day-slider",
-                            min=5,
-                            max=day_count,
-                            value=day_count,
-                            step=1,
-                            marks={
-                                i: x_days_str[i] for i in range(0, len(x_days_str), 5)
-                            },
-                        ),
-                    ],
-                    style={"margin-bottom": "50px"},
-                ),
-                html.Div(id="total-cases-errors"),
-            ]
-        ),
-        html.Footer(
-            dbc.Container(
-                [
-                    html.A("Code on Github", href=githublink),
-                    html.Br(),
-                    html.A("Data Source", href=sourceurl),
-                ],
-                className="text-white",
-            ),
-            className="page-footer font-small pt-4",
+                dbc.Row([dbc.Col(display, md=12)]),
+                dbc.Row([dbc.Col(controls, md=12)]),
+                dbc.Row([dbc.Col(footer, md=12)]),
+            ],
+            fluid=False,
         ),
     ]
 )
