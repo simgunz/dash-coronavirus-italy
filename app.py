@@ -82,7 +82,7 @@ controls = dbc.Card(
 )
 
 display = [
-    html.H1("Total number of cases", className="text-center"),
+    html.H2("Total number of cases", className="text-center"),
     dcc.Graph(id="total-cases"),
     html.Div(id="total-cases-errors"),
 ]
