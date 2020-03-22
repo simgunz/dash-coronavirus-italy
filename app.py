@@ -14,10 +14,7 @@ import dash_bootstrap_components as dbc
 from helpers import fit_data, exponenial_func, logistic_func, day_labels, nearest
 
 # Define your variables
-mytitle = "Coronavirus casi totali"
 tabtitle = "Coronavirus"
-myheading = "Contagi coronavirus"
-label1 = "Totale contagi"
 githublink = "https://github.com/simgunz/dash-coronavirus-italy"
 sourceurl = "https://github.com/pcm-dpc/COVID-19"
 colors = [
@@ -34,19 +31,43 @@ colors = [
 ]
 
 # Load the data
-dataurl = (
+dataurl_nazionale = (
     "https://raw.githubusercontent.com/pcm-dpc/"
     "COVID-19/master/dati-json/dpc-covid19-ita-andamento-nazionale.json"
 )
-data = urllib.request.urlopen(dataurl).read().decode()
-dataset = json.loads(data)
+data_nazionale = urllib.request.urlopen(dataurl_nazionale).read().decode()
 
-y_cases_total = [d["totale_casi"] for d in dataset]
-day_count = len(y_cases_total)
+dataurl_regioni = (
+    "https://raw.githubusercontent.com/pcm-dpc/"
+    "COVID-19/master/dati-json/dpc-covid19-ita-regioni.json"
+)
+data_regioni = urllib.request.urlopen(dataurl_regioni).read().decode()
+
+dataset_regioni = json.loads(data_regioni)
+
+regioni = set()
+for report in dataset_regioni:
+    if "denominazione_regione" in report:
+        regioni.add(report["denominazione_regione"])
+regioni = ["Italia"] + sorted(list((regioni)))
+
+dataset = {}
+dataset["Italia"] = json.loads(data_nazionale)
+for regione in regioni:
+    if regione != "Italia":
+        dataset[regione] = [
+            report
+            for report in dataset_regioni
+            if report["denominazione_regione"] == regione
+        ]
+
+day_count = len(dataset["Italia"])
 forcast_days = 30
 fit_day_count = day_count + forcast_days
-x_days = day_labels(dataset[0]["data"], fit_day_count)
-x_days_str = day_labels(dataset[0]["data"], fit_day_count, as_str=True)[:day_count]
+x_days = day_labels(dataset["Italia"][0]["data"], fit_day_count)
+x_days_str = day_labels(dataset["Italia"][0]["data"], fit_day_count, as_str=True)[
+    :day_count
+]
 x_days_index = list(range(len(x_days)))
 
 # Initiate the app
@@ -65,22 +86,32 @@ app.title = tabtitle
 
 # Set up the layout
 
-controls = dbc.Card(
-    dbc.FormGroup(
-        [
-            dbc.Label("Days used for fit", html_for="day-slider"),
-            dcc.Slider(
-                id="day-slider",
-                min=5,
-                max=day_count,
-                value=day_count,
-                step=1,
-                marks={i: x_days_str[i] for i in range(0, len(x_days_str), 5)},
-            ),
-        ]
-    ),
-    body=True,
+region_selector = dbc.FormGroup(
+    [
+        dbc.Label("Region", html_for="region-dropdown"),
+        dcc.Dropdown(
+            id="region-dropdown",
+            options=[{"label": regione, "value": regione} for regione in regioni],
+            value="Italia",
+        ),
+    ]
 )
+
+fit_day_selector = dbc.FormGroup(
+    [
+        dbc.Label("Days used for fit", html_for="day-slider"),
+        dcc.Slider(
+            id="day-slider",
+            min=5,
+            max=day_count,
+            value=day_count,
+            step=1,
+            marks={i: x_days_str[i] for i in range(0, len(x_days_str), 5)},
+        ),
+    ]
+)
+
+controls = dbc.Card(dbc.Form([region_selector, fit_day_selector]), body=True)
 
 display = [
     html.H2("Total number of cases", className="text-center"),
@@ -121,10 +152,17 @@ app.layout = html.Div(
 
 @app.callback(
     [Output("total-cases", "figure"), Output("total-cases-errors", "children")],
-    [Input("day-slider", "value"), Input("total-cases", "relayoutData")],
+    [
+        Input("day-slider", "value"),
+        Input("region-dropdown", "value"),
+        Input("total-cases", "relayoutData"),
+    ],
     [State("total-cases", "figure")],
 )
-def create_total_cases(selected_day_index, relayoutData, prev_figure):
+def create_total_cases(selected_day_index, selected_region, relayoutData, prev_figure):
+    selected_dataset = dataset[selected_region]
+    y_cases_total = [report["totale_casi"] for report in selected_dataset]
+
     traces = []
     errors = []
     visible_state = {}
