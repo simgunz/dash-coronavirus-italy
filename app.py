@@ -127,32 +127,39 @@ app.layout = html.Div(
 def create_total_cases(selected_day_index, relayoutData, prev_figure):
     traces = []
     errors = []
-    d = 0
-    if not prev_figure:
+    if prev_figure:
+        # Set default xaxis range to existing one
+        xaxis_range = prev_figure["layout"]["xaxis"]["range"]
+    else:
+        # Set xaxis defaults when figure created for the first time
         xmin = str(x_days[0] - timedelta(days=1))
         xmax = str(x_days[day_count + 10])
         xaxis_range = [xmin, xmax]
-    else:
-        xaxis_range = prev_figure["layout"]["xaxis"]["range"]
 
     # Define xaxis range
     if relayoutData:
-        if any(key.startswith("xaxis.range") for key in relayoutData):
-            if "xaxis.range" in relayoutData:
-                if json.dumps(relayoutData["xaxis.range"]) == json.dumps(
-                    prev_figure["layout"]["xaxis"]["range"]
-                ):
-                    raise PreventUpdate
-                xaxis_range = relayoutData["xaxis.range"]
-            elif "xaxis.range[0]" in relayoutData:
-                xaxis_range = [
-                    relayoutData["xaxis.range[0]"],
-                    relayoutData["xaxis.range[1]"],
-                ]
+        if "xaxis.autorange" in relayoutData and relayoutData["xaxis.autorange"]:
+            # Triggered when the user double clicks on the graph
+            xmin = str(x_days[0] - timedelta(days=1))
+            xmax = str(x_days[day_count + 10])
+            xaxis_range = [xmin, xmax]
+        elif "xaxis.range" in relayoutData:
+            # Triggered after creating the figure
+            if json.dumps(relayoutData["xaxis.range"]) == json.dumps(
+                prev_figure["layout"]["xaxis"]["range"]
+            ):
+                raise PreventUpdate
+        elif "xaxis.range[0]" in relayoutData:
+            # Triggered by user zooming
+            xaxis_range = [
+                relayoutData["xaxis.range[0]"],
+                relayoutData["xaxis.range[1]"],
+            ]
 
-    d = nearest(x_days, xaxis_range[1])
-    idx = min(d, len(y_cases_total) - 1)
-    y_max = y_cases_total[idx]
+    # Get maximum of yaxis
+    ridx = nearest(x_days, xaxis_range[1])
+    yidx = min(ridx, len(y_cases_total) - 1)
+    yaxis_max = y_cases_total[yidx]
 
     data_used_for_fit = dict(
         x=x_days[:selected_day_index],
@@ -203,7 +210,7 @@ def create_total_cases(selected_day_index, relayoutData, prev_figure):
                     name="Exponential fit",
                 )
             )
-            y_max = np.maximum(y_max, y_exp[d])
+            yaxis_max = np.maximum(yaxis_max, y_exp[ridx])
         except RuntimeError:
             errors.append("Exponential fit failed")
     else:
@@ -233,7 +240,7 @@ def create_total_cases(selected_day_index, relayoutData, prev_figure):
                     name="Logistic fit",
                 )
             )
-            y_max = np.maximum(y_max, y_logi[d])
+            yaxis_max = np.maximum(yaxis_max, y_logi[ridx])
         except RuntimeError:
             errors.append("Logistic fit failed")
 
@@ -247,7 +254,7 @@ def create_total_cases(selected_day_index, relayoutData, prev_figure):
                 "range": xaxis_range,
                 "rangeslider": {"visible": True, "range": [x_days[0], x_days[-1]]},
             },
-            yaxis={"range": [0, 1.1 * y_max]},
+            yaxis={"range": [0, 1.1 * yaxis_max]},
             margin={"l": 40, "b": 40, "t": 50, "r": 10},
             hovermode="closest",
             transition={"duration": 0},
