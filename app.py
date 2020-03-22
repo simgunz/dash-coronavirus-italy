@@ -1,16 +1,17 @@
 import json
 import urllib
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 import numpy as np
 
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
+from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
 
-from helpers import fit_data, exponenial_func, logistic_func, day_labels
+from helpers import fit_data, exponenial_func, logistic_func, day_labels, nearest
 
 # Define your variables
 mytitle = "Coronavirus casi totali"
@@ -121,22 +122,37 @@ app.layout = html.Div(
 @app.callback(
     [Output("total-cases", "figure"), Output("total-cases-errors", "children")],
     [Input("day-slider", "value"), Input("total-cases", "relayoutData")],
+    [State("total-cases", "figure")],
 )
-def create_total_cases(selected_day_index, relayoutData):
+def create_total_cases(selected_day_index, relayoutData, prev_figure):
     traces = []
     errors = []
-    y_max = np.amax(y_cases_total)
-
-    if any(key.startswith("xaxis.range") for key in relayoutData):
-        if "xaxis.range" in relayoutData:
-            xaxis_range = relayoutData["xaxis.range"]
-        elif "xaxis.range[0]" in relayoutData:
-            xaxis_range = [
-                relayoutData["xaxis.range[0]"],
-                relayoutData["xaxis.range[1]"],
-            ]
+    d = 0
+    if not prev_figure:
+        xmin = str(x_days[0] - timedelta(days=1))
+        xmax = str(x_days[day_count + 10])
+        xaxis_range = [xmin, xmax]
     else:
-        xaxis_range = [x_days[0] - timedelta(days=1), x_days[day_count + 10]]
+        xaxis_range = prev_figure["layout"]["xaxis"]["range"]
+
+    # Define xaxis range
+    if relayoutData:
+        if any(key.startswith("xaxis.range") for key in relayoutData):
+            if "xaxis.range" in relayoutData:
+                if json.dumps(relayoutData["xaxis.range"]) == json.dumps(
+                    prev_figure["layout"]["xaxis"]["range"]
+                ):
+                    raise PreventUpdate
+                xaxis_range = relayoutData["xaxis.range"]
+            elif "xaxis.range[0]" in relayoutData:
+                xaxis_range = [
+                    relayoutData["xaxis.range[0]"],
+                    relayoutData["xaxis.range[1]"],
+                ]
+
+    d = nearest(x_days, xaxis_range[1])
+    idx = min(d, len(y_cases_total) - 1)
+    y_max = y_cases_total[idx]
 
     data_used_for_fit = dict(
         x=x_days[:selected_day_index],
@@ -187,7 +203,7 @@ def create_total_cases(selected_day_index, relayoutData):
                     name="Exponential fit",
                 )
             )
-            y_max = np.maximum(y_max, y_exp.max())
+            y_max = np.maximum(y_max, y_exp[d])
         except RuntimeError:
             errors.append("Exponential fit failed")
     else:
@@ -217,7 +233,7 @@ def create_total_cases(selected_day_index, relayoutData):
                     name="Logistic fit",
                 )
             )
-            y_max = np.maximum(y_max, y_logi.max())
+            y_max = np.maximum(y_max, y_logi[d])
         except RuntimeError:
             errors.append("Logistic fit failed")
 
@@ -231,7 +247,7 @@ def create_total_cases(selected_day_index, relayoutData):
                 "range": xaxis_range,
                 "rangeslider": {"visible": True, "range": [x_days[0], x_days[-1]]},
             },
-            yaxis={"range": [0, 200000]},
+            yaxis={"range": [0, 1.1 * y_max]},
             margin={"l": 40, "b": 40, "t": 50, "r": 10},
             hovermode="closest",
             transition={"duration": 0},

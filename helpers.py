@@ -17,6 +17,13 @@ def day_labels(first_day_str, time_span, as_str=False):
     return x_days
 
 
+def nearest(items, pivot_str):
+    pivot_str_iso = pivot_str.split(".")[0]
+    pivot = datetime.fromisoformat(pivot_str_iso)
+    date = min(items, key=lambda x: abs(x - pivot))
+    return items.index(date)
+
+
 def exponenial_func(x, a, b, c):
     return a * np.exp(b * x) + c
 
