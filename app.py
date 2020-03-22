@@ -127,8 +127,14 @@ def create_total_cases(selected_day_index, relayoutData):
     errors = []
     y_max = np.amax(y_cases_total)
 
-    if relayoutData and "xaxis.range" in relayoutData:
-        xaxis_range = relayoutData["xaxis.range"]
+    if any(key.startswith("xaxis.range") for key in relayoutData):
+        if "xaxis.range" in relayoutData:
+            xaxis_range = relayoutData["xaxis.range"]
+        elif "xaxis.range[0]" in relayoutData:
+            xaxis_range = [
+                relayoutData["xaxis.range[0]"],
+                relayoutData["xaxis.range[1]"],
+            ]
     else:
         xaxis_range = [x_days[0] - timedelta(days=1), x_days[day_count + 10]]
 
