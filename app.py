@@ -125,6 +125,13 @@ app.layout = html.Div(
 def create_total_cases(selected_day_index, relayoutData):
     traces = []
     errors = []
+    y_max = np.amax(y_cases_total)
+
+    if relayoutData and "xaxis.range" in relayoutData:
+        xaxis_range = relayoutData["xaxis.range"]
+    else:
+        xaxis_range = [x_days[0] - timedelta(days=1), x_days[day_count + 10]]
+
     data_used_for_fit = dict(
         x=x_days[:selected_day_index],
         y=y_cases_total[:selected_day_index],
@@ -174,6 +181,7 @@ def create_total_cases(selected_day_index, relayoutData):
                     name="Exponential fit",
                 )
             )
+            y_max = np.maximum(y_max, y_exp.max())
         except RuntimeError:
             errors.append("Exponential fit failed")
     else:
@@ -203,15 +211,11 @@ def create_total_cases(selected_day_index, relayoutData):
                     name="Logistic fit",
                 )
             )
+            y_max = np.maximum(y_max, y_logi.max())
         except RuntimeError:
             errors.append("Logistic fit failed")
 
     traces += [data_used_for_fit, data_not_used_for_fit]
-
-    if "xaxis.range" in relayoutData:
-        xaxis_range = relayoutData["xaxis.range"]
-    else:
-        xaxis_range = [x_days[0] - timedelta(days=1), x_days[day_count + 10]]
 
     figure = {
         "data": traces,
