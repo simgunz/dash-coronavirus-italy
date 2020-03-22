@@ -49,8 +49,16 @@ x_days_str = day_labels(dataset[0]["data"], fit_day_count, as_str=True)[:day_cou
 x_days_index = list(range(len(x_days)))
 
 # Initiate the app
-external_stylesheets = []
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+
+# Meta tags for viewport responsiveness
+meta_viewport = {
+    "name": "viewport",
+    "content": "width=device-width, initial-scale=1, shrink-to-fit=no",
+}
+
+app = dash.Dash(
+    __name__, external_stylesheets=[dbc.themes.BOOTSTRAP], meta_tags=[meta_viewport]
+)
 server = app.server
 app.title = tabtitle
 
