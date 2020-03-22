@@ -143,12 +143,6 @@ def create_total_cases(selected_day_index, relayoutData, prev_figure):
             xmin = str(x_days[0] - timedelta(days=1))
             xmax = str(x_days[day_count + 10])
             xaxis_range = [xmin, xmax]
-        elif "xaxis.range" in relayoutData:
-            # Triggered after creating the figure
-            if json.dumps(relayoutData["xaxis.range"]) == json.dumps(
-                prev_figure["layout"]["xaxis"]["range"]
-            ):
-                raise PreventUpdate
         elif "xaxis.range[0]" in relayoutData:
             # Triggered by user zooming
             xaxis_range = [
