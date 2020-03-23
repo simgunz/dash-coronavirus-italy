@@ -156,10 +156,13 @@ app.layout = html.Div(
         Input("day-slider", "value"),
         Input("region-dropdown", "value"),
         Input("total-cases", "relayoutData"),
+        Input("total-cases", "restyleData"),
     ],
     [State("total-cases", "figure")],
 )
-def create_total_cases(selected_day_index, selected_region, relayoutData, prev_figure):
+def create_total_cases(
+    selected_day_index, selected_region, relayoutData, restyleData, prev_figure
+):
     selected_dataset = dataset[selected_region]
     y_cases_total = [report["totale_casi"] for report in selected_dataset]
 
