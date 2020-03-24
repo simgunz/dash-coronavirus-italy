@@ -37,6 +37,12 @@ colors = [
     "#17becf",  # blue-teal
 ]
 
+metrics = {
+    "totale_casi": "Total infected",
+    "deceduti": "Total death",
+    "dimessi_guariti": "Total healed",
+}
+
 # Load the data
 dataurl_nazionale = (
     "https://raw.githubusercontent.com/pcm-dpc/"
@@ -122,6 +128,17 @@ region_selector = dbc.FormGroup(
     ]
 )
 
+metric_selector = dbc.FormGroup(
+    [
+        dbc.Label("Metric", html_for="metric-dropdown"),
+        dcc.Dropdown(
+            id="metric-dropdown",
+            options=[{"label": value, "value": key} for key, value in metrics.items()],
+            value="totale_casi",
+        ),
+    ]
+)
+
 fit_day_selector = dbc.FormGroup(
     [
         dbc.Label("Days used for fit", html_for="day-slider"),
@@ -136,10 +153,12 @@ fit_day_selector = dbc.FormGroup(
     ]
 )
 
-controls = dbc.Card(dbc.Form([region_selector, fit_day_selector]), body=True)
+controls = dbc.Card(
+    dbc.Form([region_selector, metric_selector, fit_day_selector]), body=True
+)
 
 display = [
-    html.H3("Total number of cases", className="text-center mt-4"),
+    html.H3(id="plot-title", className="text-center mt-4"),
     dcc.Graph(id="total-cases"),
     html.Div(id="total-cases-errors"),
 ]
@@ -181,6 +200,7 @@ app.layout = html.Div(
 
 @app.callback(
     [
+        Output("plot-title", "children"),
         Output("total-cases", "figure"),
         Output("cases-increment", "figure"),
         Output("total-cases-errors", "children"),
@@ -188,16 +208,22 @@ app.layout = html.Div(
     [
         Input("day-slider", "value"),
         Input("region-dropdown", "value"),
+        Input("metric-dropdown", "value"),
         Input("total-cases", "relayoutData"),
         Input("total-cases", "restyleData"),
     ],
     [State("total-cases", "figure")],
 )
 def create_total_cases(
-    selected_day_index, selected_region, relayoutData, restyleData, prev_figure
+    selected_day_index,
+    selected_region,
+    selected_metric,
+    relayoutData,
+    restyleData,
+    prev_figure,
 ):
     selected_dataset = dataset[selected_region]
-    y_cases_total = [report["totale_casi"] for report in selected_dataset]
+    y_cases_total = [report[selected_metric] for report in selected_dataset]
 
     traces = []
     errors = []
@@ -366,7 +392,7 @@ def create_total_cases(
         if j["name"] in visible_state:
             j["visible"] = visible_state[j["name"]]
 
-    return figure, figure_2, "<br />".join(errors)
+    return metrics[selected_metric], figure, figure_2, "<br />".join(errors)
 
 
 if __name__ == "__main__":
