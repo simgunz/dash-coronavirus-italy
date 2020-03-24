@@ -101,6 +101,7 @@ navbar = navbar = dbc.NavbarSimple(
     brand_href="#",
     color="primary",
     dark=True,
+    className="mb-4",
 )
 
 region_selector = dbc.FormGroup(
@@ -131,9 +132,14 @@ fit_day_selector = dbc.FormGroup(
 controls = dbc.Card(dbc.Form([region_selector, fit_day_selector]), body=True)
 
 display = [
-    html.H3("Total number of cases", className="text-center mt-5"),
+    html.H3("Total number of cases", className="text-center mt-4"),
     dcc.Graph(id="total-cases"),
     html.Div(id="total-cases-errors"),
+]
+
+display_2 = [
+    html.H3("Daily increment", className="text-center mt-4"),
+    dcc.Graph(id="cases-increment"),
 ]
 
 footer = (
@@ -155,8 +161,9 @@ app.layout = html.Div(
         navbar,
         dbc.Container(
             [
-                dbc.Row([dbc.Col(display, md=12)]),
                 dbc.Row([dbc.Col(controls, md=12)]),
+                dbc.Row([dbc.Col(display, md=12)]),
+                dbc.Row([dbc.Col(display_2, md=12)]),
                 dbc.Row([dbc.Col(footer, md=12)]),
             ],
             fluid=False,
@@ -166,7 +173,11 @@ app.layout = html.Div(
 
 
 @app.callback(
-    [Output("total-cases", "figure"), Output("total-cases-errors", "children")],
+    [
+        Output("total-cases", "figure"),
+        Output("cases-increment", "figure"),
+        Output("total-cases-errors", "children"),
+    ],
     [
         Input("day-slider", "value"),
         Input("region-dropdown", "value"),
@@ -321,12 +332,39 @@ def create_total_cases(
         ),
     }
 
+    def daily_percentage_increment(y_cases):
+        y = np.array(y_cases)
+        increment = y[1:] / y[:-1] - 1
+        return [0] + list(increment)
+
+    daily_increment = daily_percentage_increment(y_cases_total)
+
+    figure_2 = {
+        "data": [
+            dict(
+                x=x_days,
+                y=daily_increment,
+                type="bar",
+                # text=df_by_continent['country'],
+                name="Daily increment",
+            )
+        ],
+        "layout": dict(
+            xaxis={"type": "date"},
+            yaxis={"tickformat": ",.0%"},
+            margin={"l": 40, "b": 40, "t": 20, "r": 10},
+            hovermode="closest",
+            transition={"duration": 0},
+            legend={"x": 0.03, "y": 0.98},
+        ),
+    }
+
     # Restore visibility state
     for j in figure["data"]:
         if j["name"] in visible_state:
             j["visible"] = visible_state[j["name"]]
 
-    return figure, "<br />".join(errors)
+    return figure, figure_2, "<br />".join(errors)
 
 
 if __name__ == "__main__":
