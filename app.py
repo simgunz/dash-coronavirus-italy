@@ -87,15 +87,15 @@ app.title = tabtitle
 # Set up the layout
 
 navbar = navbar = dbc.NavbarSimple(
-    children=dbc.DropdownMenu(
-        children=[
-            dbc.DropdownMenuItem("It", id="lang-it", href="#", active=True),
-            dbc.DropdownMenuItem("En", id="lang-en", href="#"),
-        ],
-        nav=True,
-        in_navbar=True,
-        label="Language",
-    ),
+    # children=dbc.DropdownMenu(
+    #     children=[
+    #         dbc.DropdownMenuItem("It", id="lang-it", href="#", active=True),
+    #         dbc.DropdownMenuItem("En", id="lang-en", href="#"),
+    #     ],
+    #     nav=True,
+    #     in_navbar=True,
+    #     label="Language",
+    # ),
     brand="Coronavirus forecast Italy",
     brand_style={"font-size": "2em"},
     brand_href="#",
