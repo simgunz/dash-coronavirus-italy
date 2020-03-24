@@ -153,7 +153,16 @@ fit_day_selector = dbc.FormGroup(
 )
 
 controls = dbc.Card(
-    dbc.Form([region_selector, metric_selector, fit_day_selector]), body=True
+    [
+        dbc.Row(
+            [
+                dbc.Col([region_selector], width=6,),
+                dbc.Col([metric_selector], width=6,),
+            ],
+        ),
+        dbc.Row(dbc.Col([fit_day_selector])),
+    ],
+    body=True,
 )
 
 display = [
