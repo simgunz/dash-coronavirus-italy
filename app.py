@@ -11,7 +11,14 @@ from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
 
-from helpers import fit_data, exponenial_func, logistic_func, day_labels, nearest
+from helpers import (
+    fit_data,
+    exponenial_func,
+    logistic_func,
+    day_labels,
+    nearest,
+    daily_percentage_increment,
+)
 
 # Define your variables
 tabtitle = "Coronavirus"
@@ -331,11 +338,6 @@ def create_total_cases(
             legend={"x": 0.03, "y": 0.98},
         ),
     }
-
-    def daily_percentage_increment(y_cases):
-        y = np.array(y_cases)
-        increment = y[1:] / y[:-1] - 1
-        return [0] + list(increment)
 
     daily_increment = daily_percentage_increment(y_cases_total)
 

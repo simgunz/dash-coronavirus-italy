@@ -17,6 +17,12 @@ def day_labels(first_day_str, time_span, as_str=False):
     return x_days
 
 
+def daily_percentage_increment(y_cases):
+    y = np.array(y_cases)
+    increment = y[1:] / y[:-1] - 1
+    return [0] + list(increment)
+
+
 def nearest(items, pivot_str):
     pivot_str_iso = pivot_str.split(".")[0]
     pivot = datetime.fromisoformat(pivot_str_iso)
