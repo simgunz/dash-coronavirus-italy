@@ -86,6 +86,23 @@ app.title = tabtitle
 
 # Set up the layout
 
+navbar = navbar = dbc.NavbarSimple(
+    children=dbc.DropdownMenu(
+        children=[
+            dbc.DropdownMenuItem("It", id="lang-it", href="#", active=True),
+            dbc.DropdownMenuItem("En", id="lang-en", href="#"),
+        ],
+        nav=True,
+        in_navbar=True,
+        label="Language",
+    ),
+    brand="Coronavirus forecast Italy",
+    brand_style={"font-size": "2em"},
+    brand_href="#",
+    color="primary",
+    dark=True,
+)
+
 region_selector = dbc.FormGroup(
     [
         dbc.Label("Region", html_for="region-dropdown"),
@@ -114,7 +131,7 @@ fit_day_selector = dbc.FormGroup(
 controls = dbc.Card(dbc.Form([region_selector, fit_day_selector]), body=True)
 
 display = [
-    html.H2("Total number of cases", className="text-center"),
+    html.H3("Total number of cases", className="text-center mt-5"),
     dcc.Graph(id="total-cases"),
     html.Div(id="total-cases-errors"),
 ]
@@ -135,9 +152,7 @@ footer = (
 
 app.layout = html.Div(
     [
-        dbc.Jumbotron(
-            html.H1("Coronavirus forecast Italy", className="display-4 text-center")
-        ),
+        navbar,
         dbc.Container(
             [
                 dbc.Row([dbc.Col(display, md=12)]),
@@ -299,7 +314,7 @@ def create_total_cases(
                 "rangeslider": {"visible": True, "range": [x_days[0], x_days[-1]]},
             },
             yaxis={"range": [0, 1.1 * yaxis_max]},
-            margin={"l": 40, "b": 40, "t": 50, "r": 10},
+            margin={"l": 40, "b": 40, "t": 20, "r": 10},
             hovermode="closest",
             transition={"duration": 0},
             legend={"x": 0.03, "y": 0.98},
