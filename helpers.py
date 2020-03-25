@@ -5,7 +5,7 @@ from scipy.optimize import curve_fit
 
 
 def day_labels(first_day_str, time_span, as_str=False):
-    current_day = datetime.strptime(first_day_str, "%Y-%m-%d %H:%M:%S")
+    current_day = datetime.strptime(first_day_str, "%Y-%m-%dT%H:%M:%S")
     step = timedelta(days=1)
     x_days = []
     for i in range(time_span):
