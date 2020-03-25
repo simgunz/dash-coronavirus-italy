@@ -38,7 +38,7 @@ colors = [
 
 metrics = {
     "totale_casi": "Total infected",
-    "deceduti": "Total death",
+    "deceduti": "Total deaths",
     "dimessi_guariti": "Total healed",
 }
 
