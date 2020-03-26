@@ -47,6 +47,10 @@ def logistic_func(x, L, x0, k, b):
     return L / (1 + np.exp(-k * (x - x0))) + b
 
 
+def lorentzian_func(x, l, x0, g, o):
+    return l / (1 + (((x - x0) / g) ** 2)) + o
+
+
 def fit_data(fit_func, x, y, p0, train_day_count, fit_day_count):
     x_array = np.array(x)
     y_array = np.array(y)

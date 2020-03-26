@@ -14,6 +14,7 @@ from helpers import (
     fit_data,
     exponenial_func,
     logistic_func,
+    lorentzian_func,
     day_labels,
     daily_percentage_increment,
     visible_ymax,
@@ -40,6 +41,7 @@ metrics = {
     "totale_casi": "Total infected",
     "deceduti": "Total deaths",
     "dimessi_guariti": "Total healed",
+    "totale_attualmente_positivi": "Currently infected",
 }
 
 # Load the data
@@ -293,69 +295,105 @@ def create_total_cases(
         name="Data",
     )
 
-    try:
-        p0 = (1, 1e-6, 1)
-        y_exp = fit_data(
-            exponenial_func,
-            x_days_index,
-            y_cases_total,
-            p0,
-            selected_day_index,
-            fit_day_count,
-        )
-        traces.append(
-            dict(
-                x=x_days,
-                y=y_exp,
-                # text=df_by_continent['country'],
-                mode="line",
-                line={"color": colors[2]},
-                opacity=1,
-                name="Exponential fit",
+    if selected_metric != "totale_attualmente_positivi":
+        try:
+            p0 = (1, 1e-6, 1)
+            y_exp = fit_data(
+                exponenial_func,
+                x_days_index,
+                y_cases_total,
+                p0,
+                selected_day_index,
+                fit_day_count,
             )
-        )
-        if (
-            "Exponential fit" not in visible_state
-            or visible_state["Exponential fit"] is True
-        ):
-            yaxis_max = np.maximum(
+            traces.append(
+                dict(
+                    x=x_days,
+                    y=y_exp,
+                    # text=df_by_continent['country'],
+                    mode="line",
+                    line={"color": colors[2]},
+                    opacity=1,
+                    name="Exponential fit",
+                )
+            )
+            if (
+                "Exponential fit" not in visible_state
+                or visible_state["Exponential fit"] is True
+            ):
+                yaxis_max = np.maximum(
                     yaxis_max, visible_ymax(x_days, y_exp, xaxis_range)
                 )
-    except RuntimeError:
-        errors.append("Exponential fit failed")
+        except RuntimeError:
+            errors.append("Exponential fit failed")
 
-    try:
-        p0 = (
-            max(y_cases_total),
-            np.median(np.arange(day_count)),
-            1,
-            min(y_cases_total),
-        )
-        y_logi = fit_data(
-            logistic_func,
-            x_days_index,
-            y_cases_total,
-            p0,
-            selected_day_index,
-            fit_day_count,
-        )
-        traces.append(
-            dict(
-                x=x_days,
-                y=y_logi,
-                # text=df_by_continent['country'],
-                mode="line",
-                line={"color": colors[3]},
-                opacity=1,
-                name="Logistic fit",
+    if selected_metric != "totale_attualmente_positivi":
+        try:
+            p0 = (
+                max(y_cases_total),
+                np.median(np.arange(day_count)),
+                1,
+                min(y_cases_total),
             )
-        )
-        if "Logistic fit" not in visible_state or visible_state["Logistic fit"] is True:
-            yaxis_max = np.maximum(
+            y_logi = fit_data(
+                logistic_func,
+                x_days_index,
+                y_cases_total,
+                p0,
+                selected_day_index,
+                fit_day_count,
+            )
+            traces.append(
+                dict(
+                    x=x_days,
+                    y=y_logi,
+                    # text=df_by_continent['country'],
+                    mode="line",
+                    line={"color": colors[3]},
+                    opacity=1,
+                    name="Logistic fit",
+                )
+            )
+            if (
+                "Logistic fit" not in visible_state
+                or visible_state["Logistic fit"] is True
+            ):
+                yaxis_max = np.maximum(
                     yaxis_max, visible_ymax(x_days, y_logi, xaxis_range)
                 )
-    except RuntimeError:
-        errors.append("Logistic fit failed")
+        except RuntimeError:
+            errors.append("Logistic fit failed")
+
+    if False and selected_metric == "totale_attualmente_positivi":
+        try:
+            p0 = (max(y_cases_total), 40, 10, 10)
+            y_lorentz = fit_data(
+                lorentzian_func,
+                x_days_index,
+                y_cases_total,
+                p0,
+                selected_day_index,
+                fit_day_count,
+            )
+            traces.append(
+                dict(
+                    x=x_days,
+                    y=y_lorentz,
+                    mode="line",
+                    line={"color": colors[4]},
+                    opacity=1,
+                    name="Lorentzian fit",
+                )
+            )
+            if (
+                "Lorentzian fit" not in visible_state
+                or visible_state["Lorentzian fit"] is True
+            ):
+                yaxis_max = np.maximum(
+                    yaxis_max, visible_ymax(x_days, y_lorentz, xaxis_range)
+                )
+        except RuntimeError:
+            errors.append("Lorentzian fit failed")
 
     traces += [data_used_for_fit, data_not_used_for_fit]
 
