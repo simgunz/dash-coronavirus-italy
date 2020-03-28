@@ -30,6 +30,15 @@ def nearest(items, pivot_str):
     return items.index(date)
 
 
+def visible_ymax(x, y, xaxis_range):
+    ym = -1
+    lidx = nearest(x, xaxis_range[0])
+    ridx = nearest(x, xaxis_range[1])
+    if len(y[lidx:ridx]) != 0:
+        ym = max(y[lidx:ridx])
+    return ym
+
+
 def exponenial_func(x, a, b, c):
     return a * np.exp(b * x) + c
 

@@ -15,8 +15,8 @@ from helpers import (
     exponenial_func,
     logistic_func,
     day_labels,
-    nearest,
     daily_percentage_increment,
+    visible_ymax,
 )
 
 # Define your variables
@@ -264,9 +264,7 @@ def create_total_cases(
             ]
 
     # Get maximum of yaxis
-    ridx = nearest(x_days, xaxis_range[1])
-    yidx = min(ridx, len(y_cases_total) - 1)
-    yaxis_max = y_cases_total[yidx]
+    yaxis_max = visible_ymax(x_days, y_cases_total, xaxis_range)
 
     data_used_for_fit = dict(
         x=x_days[:selected_day_index],
@@ -320,7 +318,9 @@ def create_total_cases(
             "Exponential fit" not in visible_state
             or visible_state["Exponential fit"] is True
         ):
-            yaxis_max = np.maximum(yaxis_max, y_exp[ridx])
+            yaxis_max = np.maximum(
+                    yaxis_max, visible_ymax(x_days, y_exp, xaxis_range)
+                )
     except RuntimeError:
         errors.append("Exponential fit failed")
 
@@ -351,7 +351,9 @@ def create_total_cases(
             )
         )
         if "Logistic fit" not in visible_state or visible_state["Logistic fit"] is True:
-            yaxis_max = np.maximum(yaxis_max, y_logi[ridx])
+            yaxis_max = np.maximum(
+                    yaxis_max, visible_ymax(x_days, y_logi, xaxis_range)
+                )
     except RuntimeError:
         errors.append("Logistic fit failed")
 
@@ -386,8 +388,11 @@ def create_total_cases(
             )
         ],
         "layout": dict(
-            xaxis={"type": "date"},
-            yaxis={"tickformat": ",.0%"},
+            xaxis={"type": "date", "range": xaxis_range},
+            yaxis={
+                "tickformat": ",.0%",
+                "range": [0, 1.1 * visible_ymax(x_days, daily_increment, xaxis_range)],
+            },
             margin={"l": 40, "b": 40, "t": 20, "r": 10},
             hovermode="closest",
             transition={"duration": 0},
