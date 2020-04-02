@@ -41,7 +41,7 @@ metrics = {
     "totale_casi": "Total infected",
     "deceduti": "Total deaths",
     "dimessi_guariti": "Total healed",
-    "totale_attualmente_positivi": "Currently infected",
+    "totale_positivi": "Currently infected",
 }
 
 # Load the data
