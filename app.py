@@ -295,7 +295,7 @@ def create_total_cases(
         name="Data",
     )
 
-    if selected_metric != "totale_attualmente_positivi":
+    if selected_metric != "totale_positivi":
         try:
             p0 = (1, 1e-6, 1)
             y_exp = fit_data(
@@ -327,7 +327,7 @@ def create_total_cases(
         except RuntimeError:
             errors.append("Exponential fit failed")
 
-    if selected_metric != "totale_attualmente_positivi":
+    if selected_metric != "totale_positivi":
         try:
             p0 = (
                 max(y_cases_total),
@@ -364,7 +364,7 @@ def create_total_cases(
         except RuntimeError:
             errors.append("Logistic fit failed")
 
-    if False and selected_metric == "totale_attualmente_positivi":
+    if selected_metric == "totale_positivi":
         try:
             p0 = (max(y_cases_total), 40, 10, 10)
             y_lorentz = fit_data(
