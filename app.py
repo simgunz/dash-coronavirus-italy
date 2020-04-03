@@ -364,7 +364,6 @@ def create_total_cases(
         except RuntimeError:
             errors.append("Logistic fit failed")
 
-    if selected_metric == "totale_positivi":
     if False and selected_metric == "totale_positivi":
         try:
             p0 = (max(y_cases_total), 40, 10, 10)
