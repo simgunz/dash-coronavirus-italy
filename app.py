@@ -365,6 +365,7 @@ def create_total_cases(
             errors.append("Logistic fit failed")
 
     if selected_metric == "totale_positivi":
+    if False and selected_metric == "totale_positivi":
         try:
             p0 = (max(y_cases_total), 40, 10, 10)
             y_lorentz = fit_data(
