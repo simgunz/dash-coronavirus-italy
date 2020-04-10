@@ -16,6 +16,7 @@ from helpers import (
     logistic_func,
     lorentzian_func,
     day_labels,
+    daily_increment,
     daily_percentage_increment,
     visible_ymax,
 )
@@ -178,6 +179,11 @@ display_2 = [
     dcc.Graph(id="cases-increment"),
 ]
 
+display_3 = [
+    html.H3("Daily percentage increment", className="text-center mt-4"),
+    dcc.Graph(id="cases-percentage-increment"),
+]
+
 footer = (
     html.Footer(
         dbc.Container(
@@ -200,6 +206,7 @@ app.layout = html.Div(
                 dbc.Row([dbc.Col(controls, md=12)]),
                 dbc.Row([dbc.Col(display, md=12)]),
                 dbc.Row([dbc.Col(display_2, md=12)]),
+                dbc.Row([dbc.Col(display_3, md=12)]),
                 dbc.Row([dbc.Col(footer, md=12)]),
             ],
             fluid=False,
@@ -213,6 +220,7 @@ app.layout = html.Div(
         Output("plot-title", "children"),
         Output("total-cases", "figure"),
         Output("cases-increment", "figure"),
+        Output("cases-percentage-increment", "figure"),
         Output("total-cases-errors", "children"),
     ],
     [
@@ -413,13 +421,37 @@ def create_total_cases(
         ),
     }
 
-    daily_increment = daily_percentage_increment(y_cases_total)
+    day_increment = daily_increment(y_cases_total)
 
     figure_2 = {
         "data": [
             dict(
                 x=x_days,
-                y=daily_increment,
+                y=day_increment,
+                type="bar",
+                # text=df_by_continent['country'],
+                name="Daily increment",
+            )
+        ],
+        "layout": dict(
+            xaxis={"type": "date", "range": xaxis_range},
+            yaxis={
+                "range": [0, 1.1 * visible_ymax(x_days, day_increment, xaxis_range)],
+            },
+            margin={"l": 40, "b": 40, "t": 20, "r": 10},
+            hovermode="closest",
+            transition={"duration": 0},
+            legend={"x": 0.03, "y": 0.98},
+        ),
+    }
+
+    day_percentage_increment = daily_percentage_increment(y_cases_total)
+
+    figure_3 = {
+        "data": [
+            dict(
+                x=x_days,
+                y=day_percentage_increment,
                 type="bar",
                 # text=df_by_continent['country'],
                 name="Daily increment",
@@ -429,7 +461,10 @@ def create_total_cases(
             xaxis={"type": "date", "range": xaxis_range},
             yaxis={
                 "tickformat": ",.0%",
-                "range": [0, 1.1 * visible_ymax(x_days, daily_increment, xaxis_range)],
+                "range": [
+                    0,
+                    1.1 * visible_ymax(x_days, day_percentage_increment, xaxis_range),
+                ],
             },
             margin={"l": 40, "b": 40, "t": 20, "r": 10},
             hovermode="closest",
@@ -443,7 +478,7 @@ def create_total_cases(
         if j["name"] in visible_state:
             j["visible"] = visible_state[j["name"]]
 
-    return metrics[selected_metric], figure, figure_2, "<br />".join(errors)
+    return metrics[selected_metric], figure, figure_2, figure_3, "<br />".join(errors)
 
 
 if __name__ == "__main__":
