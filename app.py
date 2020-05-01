@@ -150,7 +150,10 @@ fit_day_selector = dbc.FormGroup(
             max=day_count,
             value=day_count,
             step=1,
-            marks={i: x_days_str[i] for i in range(0, len(x_days_str), 5)},
+            marks={
+                i: x_days_str[i]
+                for i in range(0, len(x_days_str), int(np.floor(len(x_days_str) / 5)))
+            },
         ),
     ]
 )
